@@ -1,0 +1,23 @@
+name: Free Windows RDP
+
+on:
+  workflow_dispatch:
+
+jobs:
+  rdp:
+    runs-on: windows-latest
+    timeout-minutes: 360
+
+    steps:
+    - name: Enable RDP
+      run: |
+        net user runneradmin P@ssw0rd123 /add
+        net localgroup administrators runneradmin /add
+        reg add "HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0 /f
+        Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+
+    - name: Install ngrok & start tunnel
+      run: |
+        choco install ngrok -y
+        ngrok config add-authtoken 2nhKPOcaus8ZMx1ynCYzBjUV36I_4RckGm5XNmGUyVpo2kaXk
+        ngrok tcp 3389
