@@ -24,10 +24,10 @@ jobs:
       run: |
         choco install ngrok -y
 
-    - name: Configure ngrok
+    - name: Configure ngrok (FIXED)
       run: |
-        ngrok config add-authtoken %NGROK_AUTHTOKEN%
+        ngrok config add-authtoken $Env:NGROK_AUTHTOKEN
 
     - name: Start ngrok TCP tunnel
       run: |
-        ngrok tcp 3389
+        ngrok tcp 3389 --log=stdout
