@@ -1,3 +1,4 @@
+
 name: Cloudflare Windows RDP (Web)
 
 on:
@@ -11,10 +12,9 @@ jobs:
       CF_TUNNEL_TOKEN: ${{ secrets.CF_TUNNEL_TOKEN }}
 
     steps:
-    - name: Enable User
+    - name: Set password
       run: |
-        net user runneradmin P@ssw0rd123 /add
-        net localgroup administrators runneradmin /add
+        net user runneradmin P@ssw0rd123
 
     - name: Download cloudflared
       run: |
