@@ -7,6 +7,8 @@ jobs:
   rdp:
     runs-on: windows-latest
     timeout-minutes: 360
+    env:
+      NGROK_TOKEN: ${{ secrets.NGROK_TOKEN }}
 
     steps:
     - name: Enable RDP
@@ -17,7 +19,8 @@ jobs:
         Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
 
     - name: Install ngrok & start tunnel
+      shell: powershell
       run: |
         choco install ngrok -y
-        ngrok config add-authtoken 2nhKPOcaus8ZMx1ynCYzBjUV36I_4RckGm5XNmGUyVpo2kaXk
-        ngrok tcp 3389
+        ngrok config add-authtoken $Env:NGROK_TOKEN
+        ngrok tcp 3389 --log=stdout
