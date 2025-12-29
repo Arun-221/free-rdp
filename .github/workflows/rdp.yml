@@ -1,4 +1,4 @@
-name: Free Windows RDP
+name: Cloudflare Windows RDP (Web)
 
 on:
   workflow_dispatch:
@@ -8,19 +8,18 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 360
     env:
-      NGROK_TOKEN: ${{ secrets.NGROK_TOKEN }}
+      CF_TUNNEL_TOKEN: ${{ secrets.CF_TUNNEL_TOKEN }}
 
     steps:
-    - name: Enable RDP
+    - name: Enable User
       run: |
         net user runneradmin P@ssw0rd123 /add
         net localgroup administrators runneradmin /add
-        reg add "HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0 /f
-        Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
 
-    - name: Install ngrok & start tunnel
-      shell: powershell
+    - name: Download cloudflared
       run: |
-        choco install ngrok -y
-        ngrok config add-authtoken $Env:NGROK_TOKEN
-        ngrok tcp 3389 --log=stdout
+        curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe -o cloudflared.exe
+
+    - name: Start Cloudflare Tunnel
+      run: |
+        .\cloudflared.exe tunnel run --token $Env:CF_TUNNEL_TOKEN
