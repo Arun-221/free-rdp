@@ -1,4 +1,5 @@
-name: Windows RDP via Ngrok (Stable)
+
+name: Windows RDP via Ngrok (Best Possible)
 
 on:
   workflow_dispatch:
@@ -9,15 +10,11 @@ jobs:
     timeout-minutes: 360
 
     steps:
-    - name: Create or Update User
+    - name: Create User
       shell: powershell
       run: |
-        if (Get-LocalUser -Name "prateek" -ErrorAction SilentlyContinue) {
-          net user prateek "P@ssw0rd123!"
-        } else {
-          net user prateek "P@ssw0rd123!" /add
-          net localgroup administrators prateek /add
-        }
+        net user prateek "P@ssw0rd123!" /add
+        net localgroup administrators prateek /add
 
     - name: Enable RDP
       shell: powershell
@@ -27,10 +24,24 @@ jobs:
 
     - name: Install ngrok
       shell: powershell
-      run: |
-        choco install ngrok -y
+      run: choco install ngrok -y
 
     - name: Configure ngrok
       shell: powershell
       env:
-        NGROK_AUTHTOKEN: ${{ secrets.NGRO
+        NGROK_AUTHTOKEN: ${{ secrets.NGROK_AUTHTOKEN }}
+      run: ngrok config add-authtoken $env:NGROK_AUTHTOKEN
+
+    - name: Start ngrok in background
+      shell: powershell
+      run: |
+        Start-Process ngrok "tcp 3389 --log=stdout"
+        Start-Sleep -Seconds 30
+
+    - name: Keep runner alive
+      shell: powershell
+      run: |
+        while ($true) {
+          Write-Host "Runner alive..."
+          Start-Sleep -Seconds 300
+        }
