@@ -1,4 +1,4 @@
-name: Windows RDP via Ngrok (Custom User)
+name: Windows RDP via Ngrok (Stable)
 
 on:
   workflow_dispatch:
@@ -7,18 +7,19 @@ jobs:
   rdp:
     runs-on: windows-latest
     timeout-minutes: 360
-    env:
-      NGROK_AUTHTOKEN: ${{ secrets.NGROK_AUTHTOKEN }}
 
     steps:
-    - name: Create or update user
+    - name: Create or Update User
       shell: powershell
       run: |
-        if (Get-LocalUser -Name "prateek" -ErrorAction SilentlyContinue) {
-          net user prateek 1111
+        $user = "prateek"
+        $pass = "Prateek@123"
+
+        if (Get-LocalUser -Name $user -ErrorAction SilentlyContinue) {
+          net user $user $pass
         } else {
-          net user prateek 1111 /add
-          net localgroup administrators prateek /add
+          net user $user $pass /add
+          net localgroup administrators $user /add
         }
 
     - name: Enable RDP
@@ -35,7 +36,7 @@ jobs:
     - name: Configure ngrok
       shell: powershell
       run: |
-        ngrok config add-authtoken $Env:NGROK_AUTHTOKEN
+        ngrok config add-authtoken $Env:NGROK_AUTH_TOKEN
 
     - name: Start ngrok TCP tunnel
       shell: powershell
