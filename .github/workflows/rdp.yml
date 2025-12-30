@@ -12,14 +12,11 @@ jobs:
     - name: Create or Update User
       shell: powershell
       run: |
-        $user = "prateek"
-        $pass = "Prateek@123"
-
-        if (Get-LocalUser -Name $user -ErrorAction SilentlyContinue) {
-          net user $user $pass
+        if (Get-LocalUser -Name "prateek" -ErrorAction SilentlyContinue) {
+          net user prateek "P@ssw0rd123!"
         } else {
-          net user $user $pass /add
-          net localgroup administrators $user /add
+          net user prateek "P@ssw0rd123!" /add
+          net localgroup administrators prateek /add
         }
 
     - name: Enable RDP
@@ -35,10 +32,5 @@ jobs:
 
     - name: Configure ngrok
       shell: powershell
-      run: |
-        ngrok config add-authtoken $Env:NGROK_AUTH_TOKEN
-
-    - name: Start ngrok TCP tunnel
-      shell: powershell
-      run: |
-        ngrok tcp 3389 --log=stdout
+      env:
+        NGROK_AUTHTOKEN: ${{ secrets.NGRO
