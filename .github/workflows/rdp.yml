@@ -13,7 +13,7 @@ jobs:
     - name: Create User
       shell: powershell
       run: |
-        net user prateek "P@ssw0rd123!" /add
+        net user prateek "Pr@teek2004!" /add
         net localgroup administrators prateek /add
 
     - name: Enable RDP
