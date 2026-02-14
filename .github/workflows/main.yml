@@ -1,0 +1,46 @@
+name: Windows RDP via Ngrok (Best Possible)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  rdp:
+    runs-on: windows-latest
+    timeout-minutes: 360
+
+    steps:
+    - name: Create User
+      shell: powershell
+      run: |
+        net user prateek "Pr@teek2004!" /add
+        net localgroup administrators prateek /add
+
+    - name: Enable RDP
+      shell: powershell
+      run: |
+        reg add "HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0 /f
+        Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+
+    - name: Install ngrok
+      shell: powershell
+      run: choco install ngrok -y
+
+    - name: Configure ngrok
+      shell: powershell
+      env:
+        NGROK_AUTHTOKEN: ${{ secrets.NGROK_AUTHTOKEN }}
+      run: ngrok config add-authtoken $env:NGROK_AUTHTOKEN
+
+    - name: Start ngrok in background
+      shell: powershell
+      run: |
+        Start-Process ngrok "tcp 3389 --log=stdout"
+        Start-Sleep -Seconds 30
+
+    - name: Keep runner alive
+      shell: powershell
+      run: |
+        while ($true) {
+          Write-Host "Runner alive..."
+          Start-Sleep -Seconds 300
+        }
