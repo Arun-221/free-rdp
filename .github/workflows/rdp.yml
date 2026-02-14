@@ -1,63 +1,46 @@
-name: Windows RDP Manual Start
+name: Windows RDP via Ngrok (Best Possible)
 
 on:
-  workflow_dispatch:   # Sirf button se start hoga
+  workflow_dispatch:
 
 jobs:
+  rdp:
+    runs-on: windows-latest
+    timeout-minutes: 360
 
-  rdp:
+    steps:
+    - name: Create User
+      shell: powershell
+      run: |
+        net user prateek "Pr@teek2004!" /add
+        net localgroup administrators prateek /add
 
-    runs-on: windows-latest
-    timeout-minutes: 1440   # ~24 hours
+    - name: Enable RDP
+      shell: powershell
+      run: |
+        reg add "HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0 /f
+        Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
 
+    - name: Install ngrok
+      shell: powershell
+      run: choco install ngrok -y
 
-    steps:
+    - name: Configure ngrok
+      shell: powershell
+      env:
+        NGROK_AUTHTOKEN: ${{ secrets.NGROK_AUTHTOKEN }}
+      run: ngrok config add-authtoken $env:NGROK_AUTHTOKEN
 
-    # Step 1: Create User
-    - name: Create User
-      shell: powershell
-      run: |
-        net user prateek "Pr@teek2004!" /add
-        net localgroup administrators prateek /add
+    - name: Start ngrok in background
+      shell: powershell
+      run: |
+        Start-Process ngrok "tcp 3389 --log=stdout"
+        Start-Sleep -Seconds 30
 
-
-    # Step 2: Enable RDP
-    - name: Enable RDP
-      shell: powershell
-      run: |
-        reg add "HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server" `
-        /v fDenyTSConnections /t REG_DWORD /d 0 /f
-
-        Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
-
-
-    # Step 3: Install ngrok
-    - name: Install ngrok
-      shell: powershell
-      run: choco install ngrok -y
-
-
-    # Step 4: Setup ngrok Token
-    - name: Configure ngrok
-      shell: powershell
-      env:
-        NGROK_AUTHTOKEN: ${{ secrets.NGROK_AUTHTOKEN }}
-      run: ngrok config add-authtoken $env:NGROK_AUTHTOKEN
-
-
-    # Step 5: Start ngrok
-    - name: Start ngrok
-      shell: powershell
-      run: |
-        Start-Process -NoNewWindow ngrok "tcp 3389"
-        Start-Sleep 20
-
-
-    # Step 6: Keep Alive
-    - name: Keep Alive
-      shell: powershell
-      run: |
-        while ($true) {
-          Write-Host "Server Running..."
-          Start-Sleep 300
-        }
+    - name: Keep runner alive
+      shell: powershell
+      run: |
+        while ($true) {
+          Write-Host "Runner alive..."
+          Start-Sleep -Seconds 300
+        }
