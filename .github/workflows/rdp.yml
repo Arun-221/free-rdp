@@ -1,46 +1,31 @@
-name: Windows RDP via Ngrok (Best Possible)
+name: Windows RDP
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:
 
 jobs:
-  rdp:
-    runs-on: windows-latest
-    timeout-minutes: 360
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 360
 
-    steps:
-    - name: Create User
-      shell: powershell
-      run: |
-        net user prateek "Pr@teek2004!" /add
-        net localgroup administrators prateek /add
+    steps:
+    - name: Enable RDP
+      run: |
+        net user runneradmin YourPassword123!
+        net localgroup administrators runneradmin /add
+        reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0 /f
+        Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
 
-    - name: Enable RDP
-      shell: powershell
-      run: |
-        reg add "HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0 /f
-        Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+    - name: Download Ngrok
+      run: |
+        Invoke-WebRequest https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-stable-windows-amd64.zip -OutFile ngrok.zip
+        Expand-Archive ngrok.zip
+        .\ngrok\ngrok.exe authtoken YOUR_NGROK_AUTH_TOKEN
 
-    - name: Install ngrok
-      shell: powershell
-      run: choco install ngrok -y
+    - name: Start Ngrok Tunnel
+      run: |
+        Start-Process -NoNewWindow -FilePath ".\ngrok\ngrok.exe" -ArgumentList "tcp 3389"
 
-    - name: Configure ngrok
-      shell: powershell
-      env:
-        NGROK_AUTHTOKEN: ${{ secrets.NGROK_AUTHTOKEN }}
-      run: ngrok config add-authtoken $env:NGROK_AUTHTOKEN
-
-    - name: Start ngrok in background
-      shell: powershell
-      run: |
-        Start-Process ngrok "tcp 3389 --log=stdout"
-        Start-Sleep -Seconds 30
-
-    - name: Keep runner alive
-      shell: powershell
-      run: |
-        while ($true) {
-          Write-Host "Runner alive..."
-          Start-Sleep -Seconds 300
-        }
+    - name: Keep Alive
+      run: |
+        while ($true) { Start-Sleep -Seconds 60 }
